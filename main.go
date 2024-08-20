@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+
 	// "webportfolio/config"
 	"webportfolio/database"
 	"webportfolio/database/migration"
@@ -61,10 +63,13 @@ func main() {
 	// Routes
 	route.RouterApp(app)
 
-	// Start server
-	port := ":80"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":8080" // Default port
+	}
 	err := app.Listen(port)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
