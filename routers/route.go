@@ -1,7 +1,7 @@
 package route
 
 import (
-	"webportfolio/config"
+	// "webportfolio/config"
 	"webportfolio/controller"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,9 +12,9 @@ func RouterApp(app *fiber.App) {
 	app.Use(logger.New())
 	app.Get("/", controller.Index)
 	app.Get("/projectdetails/:id", controller.GetProjectDetails)
-	app.Static("/public", config.StaticDir)
-    app.Static("/css", "./public/css")
-    app.Static("/js", "./public/js")
+	// app.Static("/public", config.StaticDir)
+    // app.Static("/css", "./public/css")
+    // app.Static("/js", "./public/js")
 
 	json := app.Group("/api")
 	get := json.Group("/get")
