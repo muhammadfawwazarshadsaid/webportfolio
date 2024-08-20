@@ -10,7 +10,7 @@
       "GO_BUILD_FLAGS": "-ldflags '-s -w'"
     }
   },
-  "rewrites": [
+  "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
