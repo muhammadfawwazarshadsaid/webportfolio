@@ -1,14 +1,13 @@
 {
-  "version": 2,
-  "builds": [
+  "trailingSlash": false,
+  "rewrites": [
     {
-      "use": "@vercel/go",
-      "config": {
-        "maxDuration": 10
-      }
+      "source": "/(.*)",
+      "destination": "/api/index.go"
+    },
+    {
+      "source": "/api(.*)",
+      "destination": "/api/index.go"
     }
-  ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/$1" }],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 }
