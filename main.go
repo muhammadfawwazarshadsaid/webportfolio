@@ -7,7 +7,7 @@ import (
 	// "webportfolio/config"
 	"webportfolio/database"
 	"webportfolio/database/migration"
-	route "webportfolio/routers"
+	route "webportfolio/route"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -46,6 +46,16 @@ import (
 // 		log.Fatal(err)
 // 	}
 // }
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":3000"
+	} else {
+		port = ":" + port
+	}
+
+	return port
+}
 
 func main() {
 	app := fiber.New()
@@ -62,16 +72,10 @@ func main() {
 	// Routes
 	route.RouterApp(app)
 
-	// Get port from environment variable or use default
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = ":8080" // Default port if not set
-	}
-
-	// Start server
-	app.Listen(port)
-	err := app.Listen(port)
+	err := app.Listen(getPort())
 	if err != nil {
 		log.Fatal(err)
 	}
 }
+
+
