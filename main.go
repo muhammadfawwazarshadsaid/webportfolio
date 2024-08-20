@@ -47,7 +47,6 @@ import (
 // 	}
 // }
 
-
 func main() {
 	app := fiber.New()
 
@@ -63,13 +62,15 @@ func main() {
 	// Routes
 	route.RouterApp(app)
 
+	// Get port from environment variable or use default
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = ":8080" // Default port
+		port = ":8080" // Default port if not set
 	}
+
+	// Start server
 	err := app.Listen(port)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
