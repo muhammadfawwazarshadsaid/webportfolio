@@ -1,6 +1,11 @@
 {
   "version": 2,
-  "name": "webportfolio",
+  "builds": [
+    {
+      "src": "main.go",
+      "use": "@vercel/go"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -8,7 +13,9 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/$1"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
