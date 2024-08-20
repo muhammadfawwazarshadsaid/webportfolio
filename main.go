@@ -69,6 +69,7 @@ func main() {
 	}
 
 	// Start server
+	app.Listen(port)
 	err := app.Listen(port)
 	if err != nil {
 		log.Fatal(err)
