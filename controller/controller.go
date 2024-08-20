@@ -9,10 +9,71 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func UserControllerShow(c *fiber.Ctx) error{
-	return c.JSON(fiber.Map{
-		"message" : "Hello World",
+func Index(fc *fiber.Ctx) error {
+	projects, err := database.GetProjects()
+	if err != nil {
+		return fc.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Gagal mengambil data",
+		})
+	}
+
+	return fc.Render("index", fiber.Map{
+		"Projects": projects, // Pastikan kunci ini sesuai dengan yang diakses di template
+		"Title":    "Welcome",
 	})
+}
+
+func GetProjectDetails(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Gagal menemukan id",
+		})
+	}
+	projectdetails, err := database.GetProjectDetails(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"message": "Gagal mendapat project details",
+		})
+	}
+	if projectdetails == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Project tidak ditemukan",
+		})
+	}
+	return c.Render("projectdetails", fiber.Map{
+		"Name":        projectdetails.Name,
+		"Field":       projectdetails.Field,
+		"Description": projectdetails.Description,
+		"Image":       projectdetails.Image,
+		"URLProject":  projectdetails.URLProject,
+		"UpdatedAt":   projectdetails.UpdatedAt.Format("2006-01-02 15:04:05"),
+		"UploadedAt":  projectdetails.UploadedAt.Format("2006-01-02 15:04:05"),
+		"CompanyName": projectdetails.CompanyName,
+	})
+}
+
+func GetProjectDetailsHandler(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Gagal menemukan id",
+		})
+	}
+	projectdetails, err := database.GetProjectDetails(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"message": "Gagal mendapat project details",
+		})
+	}
+	if projectdetails == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Project tidak ditemukan",
+		})
+	}
+	return c.JSON(projectdetails)
 }
 
 func GetCompaniesHandler(c *fiber.Ctx) error {

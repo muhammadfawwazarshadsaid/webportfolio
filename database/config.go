@@ -19,7 +19,7 @@ func GetProjects() ([]entity.Project, error) {
 	db := ConnectDB()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, companyid, field, name, description, image, urlproject, updatedAt, uploadedAt FROM PROJECT")
+	rows, err := db.Query("SELECT p.id, p.companyid, p.field, p.name, p.description, p.image, p.urlproject, p.updatedAt, p.uploadedAt, c.name AS companyName, c.about AS companyAbout FROM PROJECT p JOIN company c ON p.companyid = c.id")
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func GetProjects() ([]entity.Project, error) {
 	var projects []entity.Project
 	for rows.Next() {
 		var p entity.Project
-		err := rows.Scan(&p.ID, &p.CompanyID, &p.Field, &p.Name, &p.Description, &p.Image, &p.URLProject, &p.UpdatedAt, &p.UploadedAt)
+		err := rows.Scan(&p.ID, &p.CompanyID, &p.Field, &p.Name, &p.Description, &p.Image, &p.URLProject, &p.UpdatedAt, &p.UploadedAt, &p.CompanyName, &p.CompanyAbout)
 		if err != nil {
 			return nil, err
 		}
@@ -37,6 +37,36 @@ func GetProjects() ([]entity.Project, error) {
 
 	return projects, nil
 }
+
+func GetProjectDetails(id int) (*entity.ProjectDetailsReq, error) {
+	db := ConnectDB()
+	defer db.Close()
+
+	var projectdetails entity.ProjectDetailsReq
+	query := `SELECT p.field, p.name, p.description, p.image, p.urlproject, p.updatedat, p.uploadedat, c.name AS company_name, c.about AS company_about
+			  FROM project p
+			  JOIN company c ON p.companyid = c.id
+			  WHERE p.id = $1`
+	err := db.QueryRow(query, id).Scan(
+		&projectdetails.Field,
+		&projectdetails.Name,
+		&projectdetails.Description,
+		&projectdetails.Image,
+		&projectdetails.URLProject,
+		&projectdetails.UpdatedAt,
+		&projectdetails.UploadedAt,
+		&projectdetails.CompanyName,
+		&projectdetails.About)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		log.Println("Failed to get project by ID:", err)
+		return nil, err
+	}
+	return &projectdetails, nil
+}
+
 
 func GetProjectByID(id int) (*entity.Project, error) {
 	db := ConnectDB()
