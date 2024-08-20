@@ -1,15 +1,15 @@
 {
+  "version": 2,
   "builds": [
     {
-      "use": "@vercel/go"
+      "src": "main.go",
+      "use": "@vercel/go",
+      "config": {
+        "maxDuration": 10
+      }
     }
   ],
-  "build": {
-    "env": {
-      "GO_BUILD_FLAGS": "-ldflags '-s -w'"
-    }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/$1" }],
   "cleanUrls": true,
   "trailingSlash": false
 }
