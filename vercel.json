@@ -9,22 +9,12 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ],
-  "env": {
-    "DATABASE_URL": "postgresql://webportfolio_owner:yl2OuIc8Uqai@ep-round-feather-a1z58zox.ap-southeast-1.aws.neon.tech/webportfolio?sslmode=require"
-  },
-  "domains": [
-    {
-      "domain": "arshad.my.id"
     }
   ]
 }
