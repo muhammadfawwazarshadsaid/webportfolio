@@ -107,7 +107,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Set up routes
 	RouterApp(mux) // Assuming you have a function to set up routes in `webportfolio/routers`
+	// Tambahkan middleware CORS ke seluruh aplikasi
+
+	// Atur header CORS
+	w.Header().Set("Access-Control-Allow-Origin", "https://www.arshad.my.id, https://aboutme-pied-theta.vercel.app/, https://aboutme-pied-theta.vercel.app/api/get/projects, https://www.arshad.my.id/about, https://www.google.com/, https://www.muhammadfawwazarshadsaid.github.io/about, https://www.muhammadfawwazarshadsaid.github.io/")
+	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token")
+
+
+
+
+	// Lanjutkan ke handler berikutnya
 	mux.ServeHTTP(w,r)
+
 	// Get port from environment variable or use default
 	// port := os.Getenv("PORT")
 	// if port == "" {
@@ -123,6 +135,33 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func RouterApp(mux *http.ServeMux) {
+	// Serve static files
+	// staticDir := "./public" // Adjust the static directory path as needed
+	// fileServer := http.FileServer(http.Dir(staticDir))
+	// mux.Handle("/", http.StripPrefix("/", fileServer))
+
+	// API routes
+	mux.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request){
+	// Atur header CORS
+	// Atur header CORS
+	w.Header().Set("Access-Control-Allow-Origin", "https://www.arshad.my.id, https://aboutme-pied-theta.vercel.app/, https://aboutme-pied-theta.vercel.app/api/get/projects, https://www.arshad.my.id/about, https://www.google.com/, https://www.muhammadfawwazarshadsaid.github.io/about, https://www.muhammadfawwazarshadsaid.github.io/")
+	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token")
+
+
+	mux.ServeHTTP(w,r)
+	})
+
+	mux.HandleFunc("/api/get/projects", GetProjectsHandler)
+	mux.HandleFunc("/api/get/companies", GetCompaniesHandler)
+	mux.HandleFunc("/api/get/projects/", GetAProjectHandler)
+	mux.HandleFunc("/api/get/companies/", GetACompanyHandler)
+	mux.HandleFunc("/api/get/projectdetails/", GetProjectDetailsHandler)
+
+	mux.HandleFunc("/api/create/projects", SetProjectsHandler)
+	mux.HandleFunc("/api/create/companies", SetCompaniesHandler)
+}
 func ConnectDB() *sql.DB{
 	connectSQL := "postgresql://webportfolio_owner:yl2OuIc8Uqai@ep-round-feather-a1z58zox.ap-southeast-1.aws.neon.tech/webportfolio?sslmode=require"
 	db, err := sql.Open("postgres", connectSQL)
@@ -131,12 +170,11 @@ func ConnectDB() *sql.DB{
 	}
 	return db
 }
-
 func GetProjects() ([]entity.Project, error) {
 	db := ConnectDB()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT p.id, p.companyid, p.field, p.name, p.description, p.image, p.urlproject, p.updatedAt, p.uploadedAt, c.name AS companyName, c.about AS companyAbout FROM PROJECT p JOIN company c ON p.companyid = c.id")
+	rows, err := db.Query("SELECT p.id, p.companyid, p.field, p.name, p.description, p.image, p.urlproject, p.updatedAt, p.uploadedAt, p.isRealProject, c.name AS companyName, c.about AS companyAbout FROM PROJECT p JOIN company c ON p.companyid = c.id")
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +183,7 @@ func GetProjects() ([]entity.Project, error) {
 	var projects []entity.Project
 	for rows.Next() {
 		var p entity.Project
-		err := rows.Scan(&p.ID, &p.CompanyID, &p.Field, &p.Name, &p.Description, &p.Image, &p.URLProject, &p.UpdatedAt, &p.UploadedAt, &p.CompanyName, &p.CompanyAbout)
+		err := rows.Scan(&p.ID, &p.CompanyID, &p.Field, &p.Name, &p.Description, &p.Image, &p.URLProject, &p.UpdatedAt, &p.UploadedAt, &p.IsRealProject, &p.CompanyName, &p.CompanyAbout)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +198,7 @@ func GetProjectDetails(id int) (*entity.ProjectDetailsReq, error) {
 	defer db.Close()
 
 	var projectdetails entity.ProjectDetailsReq
-	query := `SELECT p.field, p.name, p.description, p.image, p.urlproject, p.updatedat, p.uploadedat, c.name AS company_name, c.about AS company_about
+	query := `SELECT p.field, p.name, p.description, p.image, p.urlproject, p.updatedat, p.uploadedat, p.isRealProject, c.name AS company_name, c.about AS company_about
 			  FROM project p
 			  JOIN company c ON p.companyid = c.id
 			  WHERE p.id = $1`
@@ -172,6 +210,7 @@ func GetProjectDetails(id int) (*entity.ProjectDetailsReq, error) {
 		&projectdetails.URLProject,
 		&projectdetails.UpdatedAt,
 		&projectdetails.UploadedAt,
+		&projectdetails.IsRealProject,
 		&projectdetails.CompanyName,
 		&projectdetails.About)
 	if err != nil {
@@ -190,18 +229,20 @@ func GetProjectByID(id int) (*entity.Project, error) {
 	defer db.Close()
 
 	var project entity.Project
-	query := `SELECT id, companyid, field, name, description, image, urlproject, updatedAt, uploadedAt FROM PROJECT WHERE id = $1`
-	err := db.QueryRow(query, id).Scan(&project.ID, &project.CompanyID, &project.Field, &project.Name, &project.Description, &project.Image, &project.URLProject, &project.UpdatedAt, &project.UploadedAt)
+	query := `SELECT id, companyid, field, name, description, image, urlproject, updatedAt, uploadedAt, isRealProject FROM PROJECT WHERE id = $1`
+	err := db.QueryRow(query, id).Scan(&project.ID, &project.CompanyID, &project.Field, &project.Name, &project.Description, &project.Image, &project.URLProject, &project.UpdatedAt, &project.UploadedAt, &project.IsRealProject)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // No company found
+			return nil, nil // No project found
 		}
-		log.Println("Failed to get company by ID:", err)
+		log.Println("Failed to get project by ID:", err)
 		return nil, err
 	}
 
 	return &project, nil
 }
+
+
 
 func GetCompanies() ([]entity.Company, error) {
 	db := ConnectDB()
@@ -258,42 +299,27 @@ func CreateCompanies(c *entity.Company) error {
 	return nil
 }
 
-func CreateProjects(c *entity.Project) error{
+func CreateProjects(c *entity.Project) error {
 	db := ConnectDB()
 	defer db.Close()
 
-	query := `INSERT INTO PROJECT (companyid, field, name, description, image, urlproject, updatedAt, uploadedAt) 
-			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	query := `INSERT INTO PROJECT (companyid, field, name, description, image, urlproject, updatedAt, uploadedAt, isRealProject) 
+			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			  RETURNING id, companyid`
-	err := db.QueryRow(query, c.Name, c.Image, c.Field, c.Description, c.URLProject).Scan(&c.ID,&c.CompanyID)
-	if err!= nil {
+	err := db.QueryRow(query, c.CompanyID, c.Field, c.Name, c.Description, c.Image, c.URLProject, c.UpdatedAt, c.UploadedAt, c.IsRealProject).Scan(&c.ID, &c.CompanyID)
+	if err != nil {
 		return err
 	}
 	return nil
 }
+
+
 func Migration(){
 
 	db := ConnectDB()
 	defer db.Close()
 }
 
-func RouterApp(mux *http.ServeMux) {
-	// Serve static files
-	// staticDir := "./public" // Adjust the static directory path as needed
-	// fileServer := http.FileServer(http.Dir(staticDir))
-	// mux.Handle("/", http.StripPrefix("/", fileServer))
-
-	// API routes
-	mux.HandleFunc("/", GetProjectsHandler)
-	mux.HandleFunc("/api/get/projects", GetProjectsHandler)
-	mux.HandleFunc("/api/get/companies", GetCompaniesHandler)
-	mux.HandleFunc("/api/get/projects/", GetAProjectHandler)
-	mux.HandleFunc("/api/get/companies/", GetACompanyHandler)
-	mux.HandleFunc("/api/get/projectdetails/", GetProjectDetailsHandler)
-
-	mux.HandleFunc("/api/create/projects", SetProjectsHandler)
-	mux.HandleFunc("/api/create/companies", SetCompaniesHandler)
-}
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	projects, err := GetProjects()
